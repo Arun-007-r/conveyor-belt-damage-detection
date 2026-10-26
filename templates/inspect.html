@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Image inspection{% endblock %}
+{% block breadcrumb %}Image inspection{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> VISUAL INSPECTION</div><h1>Inspect a belt <em>image</em></h1><p>Upload a conveyor image to identify visible damage and review a risk assessment.</p></div>
+  <div class="heading-meta"><span class="secure-label"><i class="bi bi-hdd"></i> Stored locally</span></div>
+</section>
+{% if error %}<div class="alert alert-error" role="alert"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>{% endif %}
+{% if not model_ready %}<div class="model-banner compact-banner"><i class="bi bi-exclamation-triangle-fill"></i><div><strong>AI model not loaded</strong><span>{{ model_message or 'AI model not loaded. Please place the trained YOLO model at model/best.pt' }}</span></div></div>{% endif %}
+<section class="inspection-layout">
+  <article class="panel upload-panel">
+    <div class="panel-heading"><div><div class="section-kicker">NEW INSPECTION</div><h2>Upload image</h2></div><span class="step-count">01 <i>/ 02</i></span></div>
+    <form id="inspectionForm" action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data">
+      <label class="drop-zone" id="dropZone" for="imageInput">
+        <input type="file" id="imageInput" name="image" accept="image/jpeg,image/png,image/webp,image/bmp" required>
+        <div class="drop-placeholder" id="dropPlaceholder"><span class="upload-icon"><i class="bi bi-cloud-arrow-up"></i></span><strong>Drop belt image here</strong><span>or <b>browse files</b></span><small>JPG, PNG, WEBP or BMP · max 16 MB</small></div>
+        <img id="imagePreview" class="image-preview" alt="Preview of the selected conveyor belt image" hidden>
+        <span class="preview-change" id="previewChange" hidden><i class="bi bi-arrow-repeat"></i> Change image</span>
+      </label>
+      <div class="file-meta" id="fileMeta" hidden><span><i class="bi bi-file-earmark-image"></i><span id="fileName"></span></span><button class="icon-button remove-file" id="removeFile" type="button" aria-label="Remove selected image"><i class="bi bi-x-lg"></i></button></div>
+      <div class="form-error" id="formError" role="alert" hidden></div>
+      <button class="button button-primary analyze-button" id="analyzeButton" type="submit"><i class="bi bi-bounding-box"></i><span>Analyze belt</span><i class="bi bi-arrow-right button-end-icon"></i></button>
+    </form>
+    <div class="upload-footnote"><i class="bi bi-shield-lock"></i> Images and inspection records remain on this machine.</div>
+  </article>
+  <aside class="inspection-side">
+    <article class="panel process-panel"><div class="panel-heading"><div><div class="section-kicker">ANALYSIS PIPELINE</div><h2>What happens next</h2></div></div>
+      <ol class="mini-pipeline"><li><span class="pipeline-node"><i class="bi bi-image"></i></span><div><strong>Image validation</strong><small>File and image integrity check</small></div></li><li><span class="pipeline-node"><i class="bi bi-bounding-box"></i></span><div><strong>YOLO detection</strong><small>Class, confidence and bounding box</small></div></li><li><span class="pipeline-node"><i class="bi bi-shield-exclamation"></i></span><div><strong>Damage risk</strong><small>Rule-based maintenance priority</small></div></li></ol>
+    </article>
+    <article class="notice-panel"><span class="notice-icon"><i class="bi bi-info-circle"></i></span><div><strong>Risk is not a rupture prediction</strong><p>The assessment summarizes detected visible damage. It does not estimate the exact time or certainty of a future joint failure.</p></div></article>
+  </aside>
+</section>
+<section id="liveResult" class="panel live-result" hidden aria-live="polite"></section>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}System architecture{% endblock %}
+{% block breadcrumb %}System architecture{% endblock %}
+{% block content %}
+<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> SYSTEM OVERVIEW</div><h1>From image to <em>maintenance action</em></h1><p>A simple inspection pipeline connects visual evidence to a transparent maintenance priority.</p></div></section>
+<section class="architecture-layout">
+  <article class="panel architecture-panel"><div class="panel-heading"><div><div class="section-kicker">PROCESS FLOW</div><h2>System architecture</h2></div><span class="architecture-label"><i class="bi bi-diagram-3"></i> 8 STAGES</span></div>
+    <div class="architecture-flow">
+      {% set stages = [
+        ('01', 'Camera / uploaded image', 'A belt image is supplied by a camera or selected by an operator.', 'bi-camera'),
+        ('02', 'Image preprocessing', 'The server validates the file and prepares it for model inference.', 'bi-aspect-ratio'),
+        ('03', 'YOLO object detection', 'The trained YOLO model locates objects and predicts a class for each box.', 'bi-bounding-box'),
+        ('04', 'Damage classification', 'Damage classes are separated from Human, Other Objects, and Roller context detections.', 'bi-tags'),
+        ('05', 'Confidence analysis', 'Each object includes a model confidence score and pixel-coordinate bounding box.', 'bi-speedometer2'),
+        ('06', 'Risk assessment', 'Transparent rules map detected damage to LOW, MEDIUM, HIGH, or VERY HIGH.', 'bi-shield-exclamation'),
+        ('07', 'Maintenance recommendation', 'Class-specific guidance helps direct the next inspection step.', 'bi-wrench-adjustable'),
+        ('08', 'Dashboard / alert', 'Results and inspection history are presented to maintenance personnel.', 'bi-display'),
+      ] %}
+      {% for number, title, description, icon in stages %}<div class="architecture-stage"><span class="stage-number">{{ number }}</span><span class="stage-icon"><i class="bi {{ icon }}"></i></span><div><strong>{{ title }}</strong><p>{{ description }}</p></div>{% if not loop.last %}<span class="stage-connector"></span>{% endif %}</div>{% endfor %}
+    </div>
+  </article>
+  <aside class="architecture-aside">
+    <article class="panel class-panel"><div class="section-kicker">DATASET LABELS</div><h2>Eight classes</h2><div class="class-group-label">DAMAGE CLASSES</div><div class="class-pills">{% for label in ['Hole', 'Puncture', 'Tear', 'impact damage', 'patch work'] %}<span class="class-pill damage-pill">{{ label }}</span>{% endfor %}</div><div class="class-group-label">CONTEXT CLASSES</div><div class="class-pills">{% for label in ['Human', 'Other Objects', 'Roller'] %}<span class="class-pill">{{ label }}</span>{% endfor %}</div></article>
+    <article class="risk-explainer"><div class="section-kicker">ASSESSMENT BOUNDARY</div><h2>Risk is not a forecast</h2><p>Potential Joint Failure Risk is a rule-based summary of detected visual damage. It is not a direct prediction of whether or when a joint will rupture, and it is not a calibrated probability.</p><span class="risk-explainer-rule"><i class="bi bi-info-circle"></i> Confirm high-risk findings with an on-site inspection.</span></article>
+  </aside>
+</section>
+<section class="technology-strip"><span>FLASK</span><i class="bi bi-dot"></i><span>ULTRALYTICS YOLO</span><i class="bi bi-dot"></i><span>OPENCV</span><i class="bi bi-dot"></i><span>SQLITE</span><i class="bi bi-dot"></i><span>HTML / CSS / JAVASCRIPT</span></section>
+{% endblock %}

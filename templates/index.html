@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+{% block content %}
+<section class="page-heading dashboard-heading">
+  <div><div class="eyebrow"><span class="eyebrow-line"></span> INTELLIGENT CONVEYOR BELT MONITORING SYSTEM</div>
+    <h1>Conveyor belt <em>health overview</em></h1>
+    <p>AI-based detection of visible damage and potential joint failure risk.</p></div>
+  <a class="button button-primary" href="{{ url_for('inspect') }}"><i class="bi bi-camera"></i> Inspect an image</a>
+</section>
+{% if not model_ready %}
+<div class="model-banner"><i class="bi bi-exclamation-triangle-fill"></i><div><strong>AI model not connected</strong><span>{{ model_message }}</span></div><a href="{{ url_for('about') }}">Model setup <i class="bi bi-arrow-right"></i></a></div>
+{% endif %}
+<section class="metric-grid" aria-label="System summary">
+  <article class="metric-card"><div class="metric-top"><span>System status</span><i class="bi bi-cpu"></i></div><div class="metric-main"><span class="status-dot {% if model_ready %}green{% else %}amber{% endif %}"></span><strong>{% if model_ready %}ONLINE{% else %}STANDBY{% endif %}</strong></div><div class="metric-foot">{% if model_ready %}YOLO model loaded{% else %}Awaiting trained weights{% endif %}</div></article>
+  <article class="metric-card"><div class="metric-top"><span>Current belt condition</span><i class="bi bi-shield-check"></i></div><div class="metric-main"><span class="condition-tag {% if latest %}{{ latest.condition_label|lower|replace(' ', '-') }}{% else %}neutral{% endif %}">{% if latest %}{{ latest.condition_label }}{% else %}NOT INSPECTED{% endif %}</span></div><div class="metric-foot">Based on the latest inspection</div></article>
+  <article class="metric-card"><div class="metric-top"><span>Detected damages</span><i class="bi bi-bounding-box"></i></div><div class="metric-main"><strong class="metric-number">{% if latest %}{{ latest.defect_count }}{% else %}—{% endif %}</strong><span class="metric-unit">{{ 'in latest scan' if latest else 'awaiting scan' }}</span></div><div class="metric-foot">Context classes are excluded</div></article>
+  <article class="metric-card risk-metric"><div class="metric-top"><span>Potential joint failure risk</span><i class="bi bi-activity"></i></div><div class="metric-main"><strong class="metric-number">{% if latest and latest.risk_score is not none %}{{ latest.risk_score }}<small>%</small>{% else %}—{% endif %}</strong><span class="risk-chip {% if latest %}risk-{{ latest.risk_level|lower|replace(' ', '-') }}{% else %}risk-neutral{% endif %}">{% if latest %}{{ latest.risk_level }}{% else %}NOT ASSESSED{% endif %}</span></div><div class="risk-meter"><span style="width: {{ latest.risk_score if latest and latest.risk_score is not none else 0 }}%"></span></div><div class="metric-foot">Rule-based indicator, not a probability</div></article>
+  <article class="metric-card"><div class="metric-top"><span>Last inspection</span><i class="bi bi-calendar3"></i></div><div class="metric-main"><strong class="date-value">{% if latest %}{{ latest.created_at|replace('T', ' ') }}{% else %}No records{% endif %}</strong></div><div class="metric-foot">{{ total_inspections }} inspection{{ '' if total_inspections == 1 else 's' }} stored locally</div></article>
+</section>
+<section class="dashboard-grid">
+  <article class="panel recent-panel">
+    <div class="panel-heading"><div><div class="section-kicker">LATEST ACTIVITY</div><h2>Recent inspections</h2></div><a class="text-link" href="{{ url_for('history') }}">View history <i class="bi bi-arrow-right"></i></a></div>
+    {% if recent %}
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Inspection</th><th>Detected damage</th><th>Risk</th><th>Condition</th><th></th></tr></thead><tbody>
+      {% for record in recent %}<tr><td><span class="inspection-name">{{ record.image_name }}</span><small>{{ record.created_at|replace('T', ' ') }}</small></td><td>{% if record.defect_count %}<span class="defect-count">{{ record.defect_count }}</span>{% for item in record.detections if item.is_damage %}<span class="class-chip">{{ item.class_name }}</span>{% endfor %}{% elif record.model_available %}<span class="muted">No damage detected</span>{% else %}<span class="muted">Model unavailable</span>{% endif %}</td><td><span class="risk-chip risk-{{ record.risk_level|lower|replace(' ', '-') }}">{{ record.risk_level }}</span></td><td><span class="condition-tag {{ record.condition_label|lower|replace(' ', '-') }}">{{ record.condition_label }}</span></td><td><a class="table-action" href="{{ url_for('results', inspection_id=record.id) }}" aria-label="View {{ record.image_name }} results"><i class="bi bi-arrow-up-right"></i></a></td></tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-state compact-empty"><span class="empty-icon"><i class="bi bi-image"></i></span><strong>No inspections recorded</strong><p>Upload a belt image to begin condition monitoring.</p><a class="button button-secondary" href="{{ url_for('inspect') }}">Start first inspection</a></div>{% endif %}
+  </article>
+  <article class="panel distribution-panel"><div class="panel-heading"><div><div class="section-kicker">INSPECTION SUMMARY</div><h2>Risk distribution</h2></div><span class="small-caption">All records</span></div>
+    <div class="distribution-total"><strong>{{ total_inspections }}</strong><span>total inspections</span></div>
+    <div class="distribution-bars">
+      {% set max_count = [risk_counts['LOW'], risk_counts['MEDIUM'], risk_counts['HIGH'], risk_counts['VERY HIGH'], 1]|max %}
+      {% for level, tone in [('LOW', 'green'), ('MEDIUM', 'amber'), ('HIGH', 'orange'), ('VERY HIGH', 'red')] %}<div class="distribution-row"><div><span class="legend-dot {{ tone }}"></span><span>{{ level }}</span><strong>{{ risk_counts[level] }}</strong></div><div class="distribution-track"><span class="bar-{{ tone }}" style="width: {{ (risk_counts[level] / max_count * 100)|round }}%"></span></div></div>{% endfor %}
+    </div>
+    <div class="risk-disclaimer"><i class="bi bi-info-circle"></i><span>Risk levels summarize visible damage detections. They do not forecast exact rupture timing.</span></div>
+  </article>
+</section>
+{% endblock %}

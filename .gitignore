@@ -1,0 +1,10 @@
+.venv/
+dataset/
+/Conveyor-belt-damage.v1i.yolov8.zip
+__pycache__/
+*.py[cod]
+database/inspections.db
+static/uploads/*
+static/results/*
+!static/uploads/.gitkeep
+!static/results/.gitkeep
